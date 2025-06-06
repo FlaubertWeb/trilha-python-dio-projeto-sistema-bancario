@@ -12,7 +12,9 @@ contas = [
         "saques":[],
         "depositos":[],
         "datetime":[],
-        "saques_diarios": 0         
+        "saques_diarios": 3,
+        "limite_transacao": 10,
+        "limite_valor_sac": 500           
     },
     {
         "conta": "1002",  # Conta com saldo p/ teste
@@ -24,7 +26,9 @@ contas = [
         "saques":[],
         "depositos":[],
         "datetime":[],
-        "saques_diarios": 0 
+        "saques_diarios": 3,
+        "limite_transacao": 10,
+        "limite_valor_sac": 500    
     }
 ]
 
@@ -46,7 +50,9 @@ def criar_conta(cpf, nome, senha, saldo=0):
         "saques":[],
         "depositos":[],
         "datetime":[],
-        "saques_diarios": 0 
+        "saques_diarios": 3,
+        "limite_transacao": 10,
+        "limite_valor_sac": 500    
     }
     contas.append(conta)
     print(f"Conta criada com sucesso! Número da conta: {novo_numero}")
@@ -54,64 +60,98 @@ def criar_conta(cpf, nome, senha, saldo=0):
 
 
 def deposito(conta):
-    agora  = datetime.now()
-    valor = float(input("Digite o valor para depositar: "))
+    if conta['limite_transacao'] <= 0:
+        print('Limite de transações diárias atingido, tente novamente amanhã!') 
+        return
+
+    agora = datetime.now()
+    entrada = input("Digite o valor para depositar: ")
+    
+    if not entrada.replace('.', '', 1).isdigit():
+        print("Valor inválido.")
+        return
+
+    valor = float(entrada)
     conta["saldo"] += valor
     conta["depositos"].append(f"Depósito: +R$ {valor:.2f}")
     conta["extrato"].append(f"Depósito: +R$ {valor:.2f}")
-    conta["datetime"].append(agora)
-    print(f"Depósito de R$ {valor:.2f} realizado com sucesso.")
+    conta["datetime"].append(agora)   
+    conta['limite_transacao'] -= 1 
+
+    if conta["datetime"]:
+        date_first_operation = conta['datetime'][0]
+        if (agora - date_first_operation >= timedelta(days=1)):
+            conta['saques_diarios'] = 3
+            conta['limite_transacao'] = 10
+
+    print(f"Depósito de R$ {valor:.2f} realizado com sucesso. \nVocê ainda pode fazer {conta['limite_transacao']} transações hoje.")
+
 
 
 def saque(conta):
-    agora  = datetime.now()
-   # data_e_hora = datetime.strftime("%d/%m/%Y, %H:%M:%S")
+    agora = datetime.now()
+    entrada = input("Digite o valor para sacar: ")
 
-    valor = float(input("Digite o valor para sacar: "))
-
-    limite = 500
-
-    if valor > limite: 
-        print("Seu limite por saque é de R$500,00 por favor insira um valor abaixo ou igual do limite")
+    if not entrada.replace('.', '', 1).isdigit():
+        print("Valor inválido.")
         return
 
-    if conta['saques_diarios']>= 3:
-        print('Limite de saque diário atingido, tente noamente em amnhã!') 
+    valor = float(entrada)
+
+    if valor > conta['limite_valor_sac']: 
+        print("Seu limite por saque é de R$500,00. Insira um valor igual ou menor.")
+        return
+
+    elif conta['limite_transacao'] <= 0:
+        print('Limite de transações diárias atingido, tente novamente amanhã!') 
         return   
 
-    if valor <= conta["saldo"]:
+    elif valor <= conta["saldo"]:
         conta["saldo"] -= valor
         conta["saques"].append(f"Saque: -R$ {valor:.2f}")
         conta["extrato"].append(f"Saque: -R$ {valor:.2f}")
         conta["datetime"].append(agora)
-        print(f"Saque de R$ {valor:.2f} realizado com sucesso.")
-        conta['saques_diarios'] += 1
-        date_last_operation =  conta['datetime'][0]
-
-            
-        if(agora - date_last_operation >= timedelta(days=1)):
-            conta['saques_diarios'] = 0
-
-
-
-
+        conta['limite_transacao'] -= 1
+        print(f"Saque de R$ {valor:.2f} realizado com sucesso. \nVocê ainda pode fazer {conta['limite_transacao']} transações hoje.")
+        
+        if conta["datetime"]:
+            date_last_operation = conta['datetime'][0]
+            if (agora - date_last_operation >= timedelta(days=1)):
+                conta['saques_diarios'] = 3
+                conta['limite_transacao'] = 10
     else:
         print("Saldo insuficiente.")
 
-  
-            
-
 
 def extrato(conta):
+    if conta['limite_transacao'] <= 0:
+        print('Limite de transações diárias atingido, tente novamente amanhã!')
+        return
+
+    agora = datetime.now()
+
+    # Registro da operação extrato no extrato e datas
+    conta["extrato"].append(f"Operação extrato realizada")
+    conta["datetime"].append(agora)
+
     print(f"\nExtrato da conta {conta['conta']} - {conta['titular']}:")
     if not conta["extrato"]:
         print("Nenhuma movimentação.")
     else:
         for item, momento in zip(conta["extrato"], conta['datetime']):
             print(f"{item} - Data e hora: {momento.strftime('%d/%m/%Y, %H:%M:%S')}")
-      
 
     print(f"Saldo atual: R$ {conta['saldo']:.2f}\n")
+
+    conta['limite_transacao'] -= 1
+    print(f"Você ainda pode fazer {conta['limite_transacao']} transações hoje.")
+
+    # Reset de limite diário (ainda da pra otimizar depois)
+    if conta["datetime"]:
+        date_first_operation = conta['datetime'][0]
+        if (agora - date_first_operation >= timedelta(days=1)):
+            conta['saques_diarios'] = 3
+            conta['limite_transacao'] = 10
 
 
 def operacao():
