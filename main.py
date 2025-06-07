@@ -29,8 +29,8 @@ def operacao():
                             print("Opção inválida, tente novamente.")
                 else:
                     conta = usuario["contas"][0]
-
-                print(f"CONTA {conta['tipo'].capitalize()}")    
+                print("-------------------------------") 
+                print(f"Conta {conta['tipo']}  | Agência: {conta['agencia']}  | Nº: {conta['numero']}")   
 
                 while True:
                     selection = input("\nEscolha a operação:\n (1) Depósito\n (2) Saque\n (3) Extrato\n (4) Sair\n-> ")
@@ -101,7 +101,8 @@ def operacao():
                 cidade=cidade,
                 uf=uf,
                 agencia=AGENCIA_SAO_PAULO,
-                tipo_conta = tipo
+                tipo_conta = tipo,
+                numero_conta = gerar_proximo_numero_conta()
             ) 
 
             if novo_usuario is None:
@@ -112,7 +113,10 @@ def operacao():
             print("Cadastro realizado com sucesso!\nEntrando na conta...")
 
             # Seleciona a primeira conta criada (ou única)
+
             conta = novo_usuario["contas"][0]
+            print("-------------------------------") 
+            print(f"Conta {conta['tipo']}  | Agência: {conta['agencia']}  | Nº: {conta['numero']}") 
 
             while True:
                 selection = input("\nEscolha a operação:\n (1) Depósito\n (2) Saque\n (3) Extrato\n (4) Sair\n-> ")
@@ -133,6 +137,25 @@ def operacao():
 
         else:
             return "Opção inválida."
+        
+
+
+
+
+def gerar_proximo_numero_conta():
+    maior = 1000  # número inicial base
+
+    for usuario in usuarios:
+        for conta in usuario.get("contas", []):
+            try:
+                numero = int(conta.get("numero", 0))
+                if numero > maior:
+                    maior = numero
+            except:
+                continue
+
+    return str(maior + 1)
+      
 
 if __name__ == "__main__":
     operacao()

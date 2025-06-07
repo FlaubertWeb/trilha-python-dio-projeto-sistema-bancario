@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 ###################### CRIAR USUÁRIO ###########################
 ################################################################
 
-def criar_usuario_e_conta(cpf, nome, senha, data_nascimento, logradouro, numero, bairro, cidade, uf, agencia, tipo_conta):
+def criar_usuario_e_conta(cpf, nome, senha, data_nascimento, logradouro, numero, bairro, cidade, uf, agencia, tipo_conta, numero_conta):
     """
     Cria um novo usuário com uma conta associada.
     Agora o tipo da conta pode ser 'corrente' ou 'poupanca'.
@@ -26,7 +26,7 @@ def criar_usuario_e_conta(cpf, nome, senha, data_nascimento, logradouro, numero,
 
     conta = {
         "tipo": tipo_conta,  # Adicionado tipo da conta
-        "numero": "1001",
+        "numero": numero_conta,
         "agencia": agencia,
         "saldo": 0.0,
         "extrato": [],
@@ -156,3 +156,7 @@ def extrato(conta):
 
     conta['limite_transacao'] -= 1
     print(f"Você ainda pode fazer {conta['limite_transacao']} transações hoje.")
+
+
+
+
